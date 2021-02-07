@@ -1,46 +1,57 @@
-# pbuilder puppet module
-# See README for more infos
+# @summary Provide a pbuilder resource.
 #
-# Copyright © 2007 Raphaël Pinson <raphink@gmail.com>
+# @param ensure
+#   Whether the pbuilder should be present
+# @param release
+#   The Debian/Ubuntu release to be used (Buster, Bionic, etc)
+# @param arch
+#   The architecture of the pbuilder (i386, amd64, etc.)
+# @param methodurl
+#   The URL used to grab the packages from
+#   (e.g. http://deb.debian.org/debian)
+# @param debbuildopts
+#   The options to send to debuild (see `man dpkg-buildpackage`)
+# @param bindmounts
+#   A list of space-separated directories to bind-mount in the chroot
+# @param bindir
+#   Where to put the pbuilder script
+# @param chrootdir
+#   Where to put the basetgz tarball
+# @param cachedir
+#   Where to create the aptcache, build and result directories
+# @param confdir
+#   Where to store the configuration for the script
+# @param rctemplate
+#   The pbuilderrc ERB template to use
 #
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 3 of the License, or
-#    (at your option) any later version.
+# @example Set a pbuilder using the release and architecture of the host
+#   pbuilder { 'focal':
+#     methodurl => 'http://archive.ubuntu.com/ubuntu',
+#   }
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+# @example Destroy an old existing pbuilder
+#   pbuilder { 'jessie':
+#     ensure => absent,
+#   }
 #
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-
-# Define: pbuilder
-#
-# This definition provides a pbuilder resource.
-#
-# Parameters:
-#
-# Actions:
-#
-# Requires:
-#
-# Sample Usage:
-#
+# @example Set an am64 pbuilder for the etch release, including sources in the .changes
+#   pbuilder { 'buster-amd64':
+#     release      => buster,
+#     methodurl    => 'http://deb.debian.org/debian',
+#     debbuildopts => "-sa",
+#   }
 define pbuilder (
-  $ensure       = 'present',
-  $release      = $lsbdistcodename,
-  $arch         = $architecture,
-  $methodurl    = undef,
-  $debbuildopts = '-b',
-  $bindmounts   = undef,
-  $bindir       = '/usr/local/bin',
-  $chrootdir    = '/var/chroot/pbuilder',
-  $confdir      = '/etc/pbuilder',
-  $cachedir     = '/var/cache/pbuilder',
-  $rctemplate   = 'pbuilder/pbuilderrc.erb',
+  Enum['present', 'absent'] $ensure = 'present',
+  String[1] $release = $lsbdistcodename,
+  String[1] $arch = $architecture,
+  Optional[String[1]] $methodurl = undef,
+  String $debbuildopts = '-b',
+  Optional[String[1]] $bindmounts   = undef,
+  Stdlib::Absolutepath $bindir       = '/usr/local/bin',
+  Stdlib::Absolutepath $chrootdir    = '/var/chroot/pbuilder',
+  Stdlib::Absolutepath $confdir      = '/etc/pbuilder',
+  Stdlib::Absolutepath $cachedir     = '/var/cache/pbuilder',
+  String[1] $rctemplate   = 'pbuilder/pbuilderrc.erb',
 ) {
   # Include commons (package and group)
   include 'pbuilder::common'

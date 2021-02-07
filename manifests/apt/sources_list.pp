@@ -1,3 +1,5 @@
+# @summary Manage sources.list for a pbuilder setup
+# @api private
 define pbuilder::apt::sources_list (
   $pbuilder_name,
   $ensure='present',

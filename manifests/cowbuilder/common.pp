@@ -1,3 +1,5 @@
+# @summary Basic installation of cowbuilder
+# @api private
 class pbuilder::cowbuilder::common inherits pbuilder::common {
   package { 'cowbuilder':
     ensure => installed,

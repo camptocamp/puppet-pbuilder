@@ -1,10 +1,24 @@
+# @summary Manage a cowbuilder environment
+#
+# @param ensure
+#   Whether the pbuilder should be present
+# @param dist
+#   The Debian/Ubuntu release to be used (Buster, Bionic, etc)
+# @param arch
+#   The architecture of the pbuilder (i386, amd64, etc.)
+# @param cachedir
+#   Where to create the aptcache, build and result directories
+# @param confdir
+#   Where to store the configuration for the script
+# @param pbuilderrc
+#   The pbuilderrc content
 define pbuilder::cowbuilder (
-  $ensure='present',
-  $dist=$facts['os']['distro']['codename'],
-  $arch=$facts['os']['architecture'],
-  $cachedir='/var/cache/pbuilder',
-  $confdir='/etc/pbuilder',
-  $pbuilderrc=undef,
+  Enum['present', 'absent'] $ensure = 'present',
+  String[1] $dist = $facts['os']['distro']['codename'],
+  String[1] $arch = $facts['os']['architecture'],
+  Stdlib::Absolutepath $cachedir = '/var/cache/pbuilder',
+  Stdlib::Absolutepath $confdir = '/etc/pbuilder',
+  Optional[String[1]] $pbuilderrc = undef,
 ) {
   include pbuilder::cowbuilder::common
 
