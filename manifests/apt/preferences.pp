@@ -1,3 +1,5 @@
+# @summary Manage preferences for a pbuilder setup
+# @api private
 define pbuilder::apt::preferences (
   $pbuilder_name,
   $priority,
