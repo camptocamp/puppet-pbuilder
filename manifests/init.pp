@@ -31,8 +31,8 @@
 #
 define pbuilder (
   $ensure       = 'present',
-  $release      = $lsbdistcodename,
-  $arch         = $architecture,
+  $release      = $facts['os']['distro']['codename'],
+  $arch         = $facts['os']['architecture'],
   $methodurl    = undef,
   $debbuildopts = '-b',
   $bindmounts   = undef,

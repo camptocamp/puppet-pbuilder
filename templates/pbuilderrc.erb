@@ -16,7 +16,11 @@ MIRRORSITE="<%= @methodurl %>"
 DISTRIBUTION="<%= @release %>"
 ARCH="<%= @arch %>"
 
+<% if @basetgz %>
 BASETGZ="<%= @basetgz %>"
+<% else %>
+BASEPATH="<%= @basepath %>"
+<% end %>
 BUILDPLACE="<%= @builddir %>"
 BUILDRESULT="<%= @resultdir %>"
 APTCACHE="<%= @aptcachedir %>"

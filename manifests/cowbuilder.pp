@@ -1,17 +1,34 @@
 define pbuilder::cowbuilder (
   $ensure='present',
-  $dist=$facts['os']['distro']['codename'],
+  $release=$facts['os']['distro']['codename'],
   $arch=$facts['os']['architecture'],
   $cachedir='/var/cache/pbuilder',
+  $methodurl=undef,
+  $debbuildopts='-b',
+  $bindmounts=undef,
   $confdir='/etc/pbuilder',
-  $pbuilderrc=undef,
+  $rctemplate='pbuilder/pbuilderrc.erb',
 ) {
   include pbuilder::cowbuilder::common
 
   $cowbuilder = '/usr/sbin/cowbuilder'
+
+  # directories
+  $pbuilder_confdir     = "${confdir}/${name}"
+  $pbuilder_cachedir    = "${cachedir}/${name}"
+  $builddir             = "${pbuilder_cachedir}/build"
+  $resultdir            = "${pbuilder_cachedir}/result"
+  $aptcachedir          = "${pbuilder_cachedir}/aptcache"
+
+  # conf
+  $pbuilderrc  = "${pbuilder_confdir}/pbuilderrc"
+  $aptconfdir  = "${pbuilder_confdir}/apt.config"
+  $hookdir     = "${pbuilder_confdir}/hooks"
+
+  # base
   $basepath = "${cachedir}/base-${name}.cow"
 
-  concat { "${confdir}/${name}/apt/preferences":
+  concat { "${aptconfdir}/preferences":
     owner   => root,
     group   => root,
     mode    => '0644',
@@ -21,35 +38,44 @@ define pbuilder::cowbuilder (
   case $ensure {
     'present': {
       file {
-        "${confdir}/${name}":
+        $pbuilder_confdir:
           ensure  => directory,
           require => Package['pbuilder'];
 
-        "${confdir}/${name}/apt":
+        $pbuilder_cachedir:
           ensure  => directory,
-          require => File["${confdir}/${name}"];
+          require => Package['pbuilder'];
 
-        "${confdir}/${name}/apt/sources.list.d":
+        [$builddir, $resultdir, $aptcachedir]:
+          ensure  => directory;
+
+        $aptconfdir:
+          ensure  => directory;
+
+        "${aptconfdir}/sources.list.d":
           ensure  => directory,
           recurse => true,
-          purge   => true,
-          require => File["${confdir}/${name}/apt"];
+          purge   => true;
 
-        "${confdir}/${name}/pbuilderrc":
+        $hookdir:
+          ensure  => directory,
+          recurse => true;
+
+        $pbuilderrc:
           ensure  => file,
-          content => $pbuilderrc,
+          content => template($rctemplate);
       }
 
       -> exec {
         "create cowbuilder ${name}":
-          command     => "${cowbuilder} --create --basepath ${basepath} --dist ${dist} --architecture ${arch}",
+          command     => "${cowbuilder} --create --basepath ${basepath} --dist ${release} --architecture ${arch}",
           environment => ["NAME=${name}"], # used in /etc/pbuilderrc
           require     => File['/etc/pbuilderrc'],
           timeout     => 0,
           creates     => $basepath;
 
         "update cowbuilder ${name}":
-          command     => "${cowbuilder} --update --configfile ${confdir}/${name}/pbuilderrc --basepath ${basepath} --dist ${dist} --architecture ${arch} --override-config",
+          command     => "${cowbuilder} --update --configfile ${confdir}/${name}/pbuilderrc --basepath ${basepath} --dist ${release} --architecture ${arch} --override-config",
           environment => ["NAME=${name}"], # used in /etc/pbuilderrc
           timeout     => 0,
           refreshonly => true;
@@ -58,7 +84,7 @@ define pbuilder::cowbuilder (
 
     'absent': {
       file {
-        "${confdir}/${name}":
+        $pbuilder_confdir:
           ensure => absent;
 
         $basepath:
